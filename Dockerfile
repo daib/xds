@@ -1,18 +1,21 @@
-FROM golang:1.15.8-alpine3.13 AS builder
+FROM golang AS builder
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache git
+#RUN apk add --no-cache git
+RUN apt update
+
+RUN apt install git
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
 
-RUN go build -v -o /bin/xds
+RUN CGO_ENABLED=0 go build -v -o /bin/xds
 
-FROM envoyproxy/envoy-alpine:v1.16.0
+FROM envoy:latest
 
 COPY --from=builder /bin/xds /bin/xds
 
